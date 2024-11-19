@@ -10,7 +10,40 @@ if ($_SESSION['role'] != 2) {
     exit;
 }
 
-$pengaduan_proses = get_all_pengaduan_by_status('proses', $conn);
+// cek apakah id_report benar-benar ada
+$report_id = $_GET['report_id'] ?? null;
+
+if(!$report_id) {
+    echo "ID laporan tidak ditemukan";
+    exit();
+}
+
+// cek form apakak sudah terisi/belum
+if($_SERVER['REQUEST_METHOD'] === 'POST') {
+
+    $feedback = $_POST['feedback'] ?? '';
+    $petugas_id = $_SESSION['user_id'];   //$_SESSION = user  yang sedang login
+
+    // melakukan pengecekan ada isinya /kosong = input textarea
+    if (!empty($feedback)) {
+        $status = addFeedback($report_id, $petugas_id, $feedback, $conn);
+
+        if($status) {
+            header('Location: laporan-selesai.php');
+            exit();
+        } else {
+            echo "Terjadi kesalahan, coba lagi";
+            exit();
+        }
+
+    } else {
+        echo "Feedback wajib diisi";
+        exit();
+    }
+}
+
+
+
 
 ?>
 <!DOCTYPE html>
@@ -111,53 +144,37 @@ $pengaduan_proses = get_all_pengaduan_by_status('proses', $conn);
                 <div class="container-fluid">
 
                     <!-- Page Heading -->
-                    <h1 class="h3 mb-2 text-gray-800">Data Laporan Membutuhkan Tanggapan</h1>
-                    
-                    <!-- DataTales Example -->
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">DataTables Laporan</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="table-responsive">
-                                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                                    <thead>
-                                        <tr>
-                                            <th>Tangal</th>
-                                            <th>Pelapor</th>
-                                            <th>Laporan</th>
-                                            <th>Gambar</th>
-                                            <th>Feedback</th>
-                                        </tr>
-                                    </thead>
-                                    <?php foreach($pengaduan_proses as $row): ?>
-                                    <tbody>
-                                        <tr>
-                                            <td><?= date('d-m-Y', strtotime($row['created_at'])) ?></td>
-                                            <td><?= $row['user_id'] ?></td>
-                                            <td><?= $row['message'] ?></td>
-                                            <td>
-                                                <?php if(!empty($row['image'])): ?>
-                                                    <img src="../uploads/<?= $row['image']?>" alt="gambar" width="300">
-                                                <?php else: ?>
-                                                    <span>tidak ada gambar</span>
-                                                <?php endif ?>
-                                            </td>
-                                            <td>
-                                                <a href="feedback.php?report_id=<?= $row['id'] ?>" class="btn btn-warning">Tanggapan</a>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <?php endforeach ?>
+                    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+                        <h1 class="h3 mb-0 text-gray-800">Halaman Tambah Feedback</h1>
+                    </div>
 
-                                </table>
+                    <!-- Content Row -->
+                    <div class="row">
+                        <!-- Area Chart -->
+                        <div class="col-xl-12 col-lg-7">
+                            <div class="card shadow mb-4">
+                                <!-- Card Header - Dropdown -->
+                                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                    <h6 class="m-0 font-weight-bold text-success">Form Tambah Feedback untuk laporan dengan ID <?= $report_id ?></h6>
+                                </div>
+                                <!-- Card Body -->
+                                <div class="card-body">
+
+                                    <form method="POST">
+                                        <div class="mb-3">
+                                            <label for="exampleInputEmail1" class="form-label">Feedback</label>
+                                            <textarea name="feedback" placeholder="Masukan feedback anda" rows="3" class="form-control" id="exampleInputEmail1" aria-describedby="emailHelp"></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary">Simpan Feedback</button>
+                                    </form>
+
+                                </div>
                             </div>
                         </div>
                     </div>
 
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
 
@@ -222,4 +239,3 @@ $pengaduan_proses = get_all_pengaduan_by_status('proses', $conn);
 </body>
 
 </html>
-
