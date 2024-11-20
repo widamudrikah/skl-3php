@@ -102,6 +102,33 @@ function addFeedback($report_id, $petugas_id, $feedback, $conn) {
 }
 
 // get reports with feedbacks by status selesai
+function get_reports_with_feedback_by_status($conn) {
+    // melakukan query
+    $query = "SELECT
+                    reports.id,
+                    users.username AS pelapor,
+                    reports.message,
+                    reports.image,
+                    reports.created_at AS report_date,
+                    feedbacks.feedback,
+                    feedbacks.created_at AS feedback_date
+                FROM reports
+                LEFT JOIN feedbacks ON reports.id = feedbacks.report_id
+                LEFT JOIN users ON reports.user_id = users.id
+                WHERE reports.status = 'selesai'
+                ORDER BY reports.created_at DESC";
+
+    $result = $conn->query($query);
+
+    // menyimpan data hasil query
+    $data = [];
+    while($row = $result->fetch_assoc()){
+        $data[] = $row;
+    }
+
+    return $data;
+}
+
 
 
 // get reports with feedback by user and by status 
